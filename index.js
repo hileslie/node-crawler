@@ -13,16 +13,24 @@ async function test() {
 
     // 打开新页面
     let page = await browser.newPage();
-    await page.goto('https://dytt8.net/');
+    await page.goto('https://dytt8.net/index.htm');
 
-    page.$$eval('#menu li a', (elements) => {
+    let eles = await page.$$eval('#menu li a', (elements) => {
+        let eles = []
         elements.forEach((el, i) => {
-            console.log('el', el.innerHTML)
+            if(el.getAttribute('href') !== '#') {
+                var eleObj = {
+                    href: el.getAttribute('href'),
+                    text: el.innerText,
+                }
+                eles.push(eleObj)
+            }
         })
+        return eles;
     });
-
-    page.on('console', (...args) => {
-        console.log(args)
+    console.log('eles: ', eles);
+    
+    page.on('console', (eventMsg) => {
     })
 }
 test()
