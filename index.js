@@ -1,36 +1,47 @@
 let puppeteer = require('puppeteer');
-
-async function test() {
-    let browser = await puppeteer.launch(
-        {
-            headless: false,
-            defaultViewport: {
-                width: 1400,
-                height: 800,
-            }
-        }
-    );
-
-    // 打开新页面
-    let page = await browser.newPage();
-    await page.goto('https://dytt8.net/index.htm');
-
-    let eles = await page.$$eval('#menu li a', (elements) => {
-        let eles = []
-        elements.forEach((el, i) => {
-            if(el.getAttribute('href') !== '#') {
-                var eleObj = {
-                    href: el.getAttribute('href'),
-                    text: el.innerText,
-                }
-                eles.push(eleObj)
-            }
-        })
-        return eles;
-    });
-    console.log('eles: ', eles);
+let axios = require('axios');
+let httpUrl = 'https://www.biquge.com.cn/';
+(async function() {
+    let debugOptions = {
+        headless: false,
+        defaultViewport: {
+            width: 1400,
+            height: 800,
+        },
+        slowMo: 200
+    }
     
-    page.on('console', (eventMsg) => {
-    })
-}
-test()
+    let options = {
+        headless: true,
+    }
+    
+    let browser = await puppeteer.launch(debugOptions);
+    
+    async function getAllNav() {
+        let page = await browser.newPage();
+        await page.goto(httpUrl);
+        let navs = page.$$eval('.nav ul li a', function(elements) {
+            let navs = [];
+            elements.forEach(element => {
+                if (element.text !== '首页' && element.text !== '临时书架') {
+                    let obj = {
+                        href: element.href,
+                        text: element.text,
+                    }
+                    navs.push(obj);
+                }
+            })
+            return navs;
+        });
+        return navs;
+    }
+    let navs = await getAllNav();
+    console.log('navs: ', navs);
+
+    async function getPage() {
+        let page = await browser.newPage();
+        await page.goto(navs[0].href);
+    }
+    getPage();
+
+})()
