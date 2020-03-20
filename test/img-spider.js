@@ -50,7 +50,7 @@ async function getListPage(pageNum){
             }
         })
         await lcWait(40 * i);
-        parsePage(pageUrl, title);
+        await parsePage(pageUrl, title);
     })
 }
 
