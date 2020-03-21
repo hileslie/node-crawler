@@ -38,14 +38,30 @@ let { getStat, wait } = require('./utils/index');
 		});
 		await page.close();
 
-		// 进入分类页面获取小说列表
-		await getBookList(navs[0]);
+		// 进入分类页面获取小说所有列表
+		await getAllBookList(navs[0]);
 	}
 	getAllNav();
 
-	async function getBookList(nav) {
+	async function getAllBookList(nav) {
+		let allBookList = [];
+		for(let i = 1; i <= 5; i++) {
+			await wait(200 * i);
+			let list = await getBookList(nav, i);
+			allBookList = allBookList.concat(list);
+		}
+
+		// 进入小说介绍页面
+		await getBookInfo(allBookList[0])
+	}
+
+	async function getBookList(nav, i) {
 		let page = await browser.newPage();
-		await page.goto(nav.href);
+		let href = nav.href;
+		if (i !== 1) {
+			href = nav.href.replace('.html', `/${i}.html`)
+		}
+		await page.goto(href);
 		let bookList = await page.$$eval('.pt-sort-detail .pt-sortdetail-title', function(elements) {
 			let len = elements.length - 1;
 			let list = [];
@@ -71,9 +87,7 @@ let { getStat, wait } = require('./utils/index');
 			return list;
 		})
 		await page.close();
-
-		// 进入小说介绍页面
-		await getBookInfo(bookList[0])
+		return bookList;
 	}
 
 	async function getBookInfo(book) {
@@ -105,8 +119,6 @@ let { getStat, wait } = require('./utils/index');
 		bookDetail.info = bookInfo;
 		bookDetail.chapter = chapterList;
 
-		// 获取小说章节内容
-		// await getChapterDetail(bookDetail.info, bookDetail.chapter)
 		// 下载小说封面
 		await getBookCover(bookDetail.info, bookDetail.chapter);
 	}
@@ -119,6 +131,8 @@ let { getStat, wait } = require('./utils/index');
 			fs.mkdirSync(`./books/${info.author}/${info.name}`);
 			await parsePage(info);
 		}
+		
+		// 获取小说章节内容
 		for(let i = 0; i < chapter.length; i++) {
 			await wait(200 * i);
 			await getChapterDetail(info, chapter[i]);		
